@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./header %>
+</head>
+
+<body class="container">
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Breed</th>
+				<th>Birthdate</th>
+				<th></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<% puppies.forEach(function(puppy){ %>
+				<tr>
+					<td><a href="/<%= puppy.id %>"><%= puppy.name %></a></td>
+					<td><%= puppy.breed %></td>
+					<td><%= puppy.birthdate %></td>
+					<td><a href="/<%= puppy.id %>/edit">Edit</a></td>
+					<td><a href="/<%= puppy.id %>/destroy?_method=DELETE">Delete</a></td>
+				</tr>
+			<% })%>
+		</tbody>
+	</table>
+
+	<a href="/new">New puppy</a>
+</body>
+</html>

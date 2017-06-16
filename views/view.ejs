@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./header %>
+</head>
+
+<body class="container">
+
+<p>
+	<b>Name:</b>
+	<%= puppy.name %>
+</p>
+<p>
+	<b>Breed:</b>
+	<%= puppy.breed %>
+</p>
+<p>
+	<b>Birthdate:</b>
+	<%= puppy.birthdate %>
+</p>
+
+<a href="/<%= puppy.id %>/edit">Edit</a>
+
+</body>
+</html>
