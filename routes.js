@@ -1,20 +1,28 @@
 const express = require('express');
-
 const router  = express.Router();
+const db = require('./db/queries');
+const renderError = require('./lib/responseHelpers').renderError;
 
-const db = require('./db/knex');
+const validPuppy = require('./lib/validations').validPuppy;
 
-function validPuppy(puppy) {
-	return typeof puppy.name == 'string' &&
-		puppy.name.trim() != ''
-		// + add something for the birthdate
-};
+function validatePuppyForSave(req, res, callback) {
+	if (validPuppy(req.body)) {
+		const puppy = {
+			name: req.body.name,
+			breed: req.body.breed,
+			birthdate: req.body.birthdate
+		};
+		callback(puppy);
+	} else {
+		// the puppy data didn't pass validation
+		renderError(res, 400, "Invalid puppy.");
+	}
+}
 
 router
 
 .get('/', (req, res) => {
-	db.column(db.raw("puppies.id, puppies.name, puppies.breed, to_char(puppies.birthdate, 'YYYY-MM-DD') as birthdate"))
-	.from('puppies')
+	db.getAll()
 	.then(function(puppies) {
 		res.render('index', {
 			puppies: puppies
@@ -23,7 +31,7 @@ router
 	.catch(function(err) {
 		// the database returned an error
 		console.log(err);
-		res.status(500).send("Internal server error.");
+		renderError(res, 500, "Something went wrong.");
 	})
 })
 
@@ -32,13 +40,8 @@ router
 })
 
 .post('/create', (req, res) => {
-	if (validPuppy(req.body)) {
-		const puppy = {
-			name: req.body.name,
-			breed: req.body.breed,
-			birthdate: req.body.birthdate
-		};
-		db('puppies').insert(puppy, 'id')
+	validatePuppyForSave(req, res, (puppy) => {
+		db.create(puppy)
 		.then(ids => {
 			const id = ids[0];
 			res.redirect('/' + id);
@@ -46,20 +49,15 @@ router
 		.catch(function(err) {
 			// the database returned an error
 			console.log(err);
-			res.status(500).send("Internal server error.");
-		})
-	} else {
-		// the puppy data didn't pass validation
-		res.status(500).send("Invalid puppy.");
-	}
+			renderError(res, 500, "Something went wrong.");
+		})		
+	})
 })
 
 .get('/:id', (req, res) => {
 	const id = req.params.id;
 	if (! isNaN(id)) {
-		db.column(db.raw("puppies.id, puppies.name, puppies.breed, to_char(puppies.birthdate, 'YYYY-MM-DD') as birthdate"))
-		.from('puppies').where("puppies.id", id)
-		.first()
+		db.getOne(id)
 		.then(function(puppy) {
 			if (puppy) {
 				res.render('view', {
@@ -67,26 +65,24 @@ router
 				})
 			} else {
 				//no record was returned for this id
-				res.status(500).send("No puppy with this id.")
+				renderError(res, 403, "Forbidden.");
 			}
 		})
 		.catch(function(err) {
 			// the database returned an error
 			console.log(err);
-			res.status(500).send("Internal server error.");
+			renderError(res, 500, "Something went wrong.");
 		})
 	} else {
 		// the id was invalid format
-		res.status(500).send("Invalid puppy id.");
+		renderError(res, 403, "Forbidden.");
 	}
 })
 
 .get('/:id/edit', (req, res) => {
 	const id = req.params.id;
 	if (! isNaN(id)) {
-		db.column(db.raw("puppies.id, puppies.name, puppies.breed, to_char(puppies.birthdate, 'YYYY-MM-DD') as birthdate"))
-		.from('puppies').where("puppies.id", id)
-		.first()
+		db.getOne(id)
 		.then(function(puppy) {
 			if (puppy) {
 				res.render('edit', {
@@ -94,63 +90,55 @@ router
 				})
 			} else {
 				//no record was returned for this id
-				res.status(500).send("No puppy with this id.")
+				renderError(res, 403, "Forbidden.");
 			}
 		})
 		.catch(function(err) {
 			// the database returned an error
 			console.log(err);
-			res.status(500).send("Internal server error.");
+			renderError(res, 500, "Something went wrong.");
 		})
 	} else {
 		// the id was invalid format
-		res.status(500).send("Invalid puppy id.");
+		renderError(res, 403, "Something went wrong.");
 	}
 })
 
 .put('/:id/update', (req, res) => {
 	const id = req.params.id;
-	if (validPuppy(req.body) && !isNaN(id)) {
-		const puppy = {
-			name: req.body.name,
-			breed: req.body.breed,
-			birthdate: req.body.birthdate
-		};
-		db('puppies')
-		.where('puppies.id', id)
-		.update(puppy)
-			.then(() => {
-				res.redirect('/')
+	if (!isNaN(id)) {
+		validatePuppyForSave(req, res, (puppy) => {
+			db.update(puppy, id)
+				.then(() => {
+					res.redirect('/')
+				})
+				.catch(function(err) {
+				// the database returned an error
+				console.log(err);
+				renderError(res, 500, "Something went wrong.");
 			})
-			.catch(function(err) {
-			// the database returned an error
-			console.log(err);
-			res.status(500).send("Internal server error.");
 		})
 	} else {
-		// the puppy data didn't pass validation or id was invalid format
-		res.status(500).send("Invalid puppy.");
+		// the id was invalid format
+		renderError(res, 403, "Forbidden.");
 	}
 })
 
 .delete('/:id/destroy', (req, res) => {
 	const id = req.params.id;
 	if (! isNaN(id)) {
-		db('puppies')
-		.where("puppies.id", id)
-		.first()
-		.del()
+		db.delete(id)
 		.then(() => {
 			res.redirect('/')
 		})
 		.catch(function(err) {
 			// the database returned an error
 			console.log(err);
-			res.status(500).send("Internal server error.");
+			renderError(res, 500, "Something went wrong.");
 		})
 	} else {
 		// the id was invalid format
-		res.status(500).send("Invalid puppy id.");
+		renderError(res, 403, "Forbidden.");
 	}
 })
 
