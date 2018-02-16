@@ -19,6 +19,15 @@ const methodOverride = require('./lib/method-override');
 
 app.use(methodOverride);
 
+// implement CORS from the frontend app
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "http://localhost:8000");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  next();
+});
+
+// set up router
 app.use('/', routes);
 //app.use('/users', users);
 
