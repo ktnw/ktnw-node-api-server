@@ -1,9 +1,9 @@
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
+const morgan = require('morgan');
 
 const routes = require('./routes');
-//const users = require('./routes/users')
 
 const app = express();
 
@@ -27,10 +27,11 @@ app.use(function(req, res, next) {
   next();
 });
 
+// log requests to the console
+app.use(morgan('dev'));
+
 // set up router
 app.use('/', routes);
-//app.use('/users', users);
-
 
 app.use('*',function(req, res){
   res.status(404).send('Page Not Found!');
