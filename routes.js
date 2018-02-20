@@ -20,7 +20,7 @@ function validatePuppyForSave(req, res, callback) {
 
 router
 
-.get('/api/puppies', (req, res) => {
+.get('/api/v1/puppies', (req, res) => {
 	db.getAll()
 	.then(function(puppies) {
 		res.send({
@@ -34,7 +34,7 @@ router
 	})
 })
 
-.post('/api/puppies', (req, res) => {
+.post('/api/v1/puppies', (req, res) => {
 	validatePuppyForSave(req, res, (puppy) => {
 		db.create(puppy)
 		.then(ids => {
@@ -49,7 +49,7 @@ router
 	})
 })
 
-.get('/api/puppy/:id', (req, res) => {
+.get('/api/v1/puppies/:id', (req, res) => {
 	const id = req.params.id;
 	if (! isNaN(id)) {
 		db.getOne(id)
@@ -74,7 +74,7 @@ router
 	}
 })
 
-.put('/api/puppy/:id', (req, res) => {
+.put('/api/v1/puppies/:id', (req, res) => {
 	const id = req.params.id;
 	if (!isNaN(id)) {
 		validatePuppyForSave(req, res, (puppy) => {
@@ -94,7 +94,7 @@ router
 	}
 })
 
-.delete('/api/puppy/:id', (req, res) => {
+.delete('/api/v1/puppies/:id', (req, res) => {
 	const id = req.params.id;
 	if (! isNaN(id)) {
 		db.delete(id)
